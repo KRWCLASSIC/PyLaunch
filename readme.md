@@ -1,5 +1,7 @@
 # PyLaunch `1.0`
 
+![App Icon](icon.ico)
+
 [![Static Badge](https://img.shields.io/badge/Stable_Version-1.0-yellow)](https://github.com/KRWCLASSIC/PyLaunch/)
 [![Static Badge](https://img.shields.io/badge/Code_Version-1.0-yellow)](https://github.com/KRWCLASSIC/PyLaunch)
 [![Static Badge](https://img.shields.io/badge/Maintainer-KRWCLASSIC-green)](https://github.com/KRWCLASSIC)
