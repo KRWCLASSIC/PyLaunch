@@ -341,7 +341,9 @@ class LauncherApp(QMainWindow):
         self.config["keep_console"] = self.keep_console.isChecked()
         self.config["silent_mode"] = self.silent_mode.isChecked()
         try:
-            with open(CONFIG_PATH, "w") as file:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            config_path = os.path.join(script_dir, CONFIG_PATH)
+            with open(config_path, "w") as file:
                 json.dump(self.config, file, indent=4)
         except Exception as e:
             self.show_error(f"Error saving config: {e}")
@@ -358,7 +360,9 @@ class LauncherApp(QMainWindow):
                 new_config["console"] = self.config["console"]
             self.config = new_config
             try:
-                with open(CONFIG_PATH, "w") as file:
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                config_path = os.path.join(script_dir, CONFIG_PATH)
+                with open(config_path, "w") as file:
                     json.dump(self.config, file, indent=4)
             except Exception as e:
                 self.show_error(f"Error saving config: {e}")

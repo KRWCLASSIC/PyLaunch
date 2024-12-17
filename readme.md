@@ -17,6 +17,17 @@ PyLaunch is a simple launcher application for Python scripts that allows users t
 - **Configuration Management**: Easily set and save paths for the IDE and console through a setup dialog.
 - **Cross-Platform Support**: Designed to work on both Windows and Unix-like systems. (NOT TESTED!)
 
+## User Interface
+
+<details>
+<summary>Preview of the GUI.</summary>
+
+![Screenshot 1](https://i.imgur.com/gnAZVlv.png)
+![Screenshot 2](https://i.imgur.com/9xqf8AX.png)
+![Screenshot 3](https://i.imgur.com/MXN6vG8.png)
+
+</details>
+
 ## Installation
 
 1. **Clone the Repository**:
