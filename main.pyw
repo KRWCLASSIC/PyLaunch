@@ -30,6 +30,10 @@ class SetupDialog(QDialog):
         self.setWindowTitle("Config")
         self.setFixedSize(400, 150)
         
+        icon_path = os.path.join(os.path.dirname(__file__), "icon.ico")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+        
         layout = QVBoxLayout()
         self.setLayout(layout)
         

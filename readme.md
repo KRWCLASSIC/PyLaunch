@@ -1,12 +1,12 @@
 # PyLaunch `1.0`
 
-![App Icon](icon.ico)
-
 [![Static Badge](https://img.shields.io/badge/Stable_Version-1.0-yellow)](https://github.com/KRWCLASSIC/PyLaunch/)
 [![Static Badge](https://img.shields.io/badge/Code_Version-1.0-yellow)](https://github.com/KRWCLASSIC/PyLaunch)
 [![Static Badge](https://img.shields.io/badge/Maintainer-KRWCLASSIC-green)](https://github.com/KRWCLASSIC)
 
 [![Static Badge](https://img.shields.io/badge/Current_State-Usable-red)](where_u_goin_dawg)
+
+![App Icon](icon.ico)
 
 PyLaunch is a simple launcher application for Python scripts that allows users to easily run their Python files in a specified IDE or console. It provides a user-friendly interface for configuring the paths to the IDE and console.
 
