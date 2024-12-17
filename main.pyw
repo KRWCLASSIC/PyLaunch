@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QVBoxLayout, QLabel, QWidget, QMessageBox,
-    QDialog, QLineEdit, QFormLayout, QCheckBox, QHBoxLayout, QFileDialog
+    QDialog, QLineEdit, QFormLayout, QCheckBox, QHBoxLayout, QFileDialog, QComboBox
 )
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt
@@ -24,11 +24,22 @@ DEFAULT_CONFIG = {
     "silent_mode": False
 }
 
+base_title = "PyLaunch 1.1"
+
+WINDOW_WIDTH = 400
+WINDOW_HEIGHT_DEFAULT = 120
+WINDOW_HEIGHT_WITH_ARGUMENTS = 147
+WINDOW_HEIGHT_WITH_PYW = 140
+WINDOW_HEIGHT_WITH_PYW_AND_ARGUMENTS = 163
+
+CONFIG_DIALOG_WIDTH = 400
+CONFIG_DIALOG_HEIGHT = 150
+
 class SetupDialog(QDialog):
     def __init__(self, existing_config=None):
         super().__init__()
         self.setWindowTitle("Config")
-        self.setFixedSize(400, 150)
+        self.setFixedSize(CONFIG_DIALOG_WIDTH, CONFIG_DIALOG_HEIGHT)
         
         icon_path = os.path.join(os.path.dirname(__file__), "icon.ico")
         if os.path.exists(icon_path):
@@ -40,20 +51,26 @@ class SetupDialog(QDialog):
         form_layout = QFormLayout()
         
         self.ide_name = QLineEdit()
-        self.ide_name.setPlaceholderText("e.g. code, cursor, pycharm, sublime_text")
-        self.console_path = QLineEdit()
+        self.ide_name.setPlaceholderText("e.g. code, cursor, pycharm, sublime_text, notepad")
+        self.ide_name.setToolTip("""Make sure your preffered IDE is in PATH
+You can check that by trying to run it thru cmd just by running its name""")
+        
+        self.console_combo = QComboBox()
+        self.console_combo.addItems(self.detect_consoles(existing_config))
+        self.console_combo.setToolTip("""Select the console to run your scripts (e.g., cmd.exe, powershell.exe).
+Linux ones might not work!""")
         
         if existing_config and existing_config.get("console"):
-            self.console_path.setText(os.path.basename(existing_config["console"]))
+            self.console_combo.setCurrentText(os.path.basename(existing_config["console"]))
         else:
             default_console = "cmd.exe" if os.name == 'nt' else "terminal"
-            self.console_path.setText(default_console)
+            self.console_combo.setCurrentText(default_console)
         
         if existing_config and existing_config.get("ide"):
             self.ide_name.setText(os.path.basename(existing_config["ide"]))
         
         form_layout.addRow("IDE Name:", self.ide_name)
-        form_layout.addRow("Console Name:", self.console_path)
+        form_layout.addRow("Console:", self.console_combo)
         
         layout.addLayout(form_layout)
         
@@ -76,6 +93,16 @@ class SetupDialog(QDialog):
         button_layout.addWidget(set_default_button)
         
         layout.addLayout(button_layout)
+
+    def detect_consoles(self, existing_config):
+        """Detect available consoles based on the operating system."""
+        consoles = []
+        if os.name == 'nt':  # Windows
+            consoles = ["cmd.exe", "powershell.exe"]  # Removed wt.exe
+        else:  # Linux and macOS
+            consoles = ["gnome-terminal", "xterm", "konsole", "terminator", "terminal"]  # Add more if needed
+        
+        return consoles
 
     def set_as_default_app(self):
         """Set this script as the default app for .py files (Windows only)."""
@@ -131,12 +158,12 @@ start /b "" "{python_path}" "{script_path}" "%*"
     def get_paths(self):
         """Get the paths of the IDE and console from the user input."""
         ide_path = self.find_executable(self.ide_name.text())
-        console_path = self.find_executable(self.console_path.text())
+        console_path = self.find_executable(self.console_combo.currentText())
         
         if not ide_path:
             QMessageBox.warning(self, "Warning", f"Could not find IDE: {self.ide_name.text()}")
         if not console_path:
-            QMessageBox.warning(self, "Warning", f"Could not find Console: {self.console_path.text()}")
+            QMessageBox.warning(self, "Warning", f"Could not find Console: {self.console_combo.currentText()}")
             
         return {
             "ide": ide_path,
@@ -155,7 +182,6 @@ def load_config():
             config["keep_console"] = True
             with open(config_path, "w") as file:
                 json.dump(config, file, indent=4)
-            print(f"Config file created at {config_path}")
             return config
         else:
             sys.exit(0)
@@ -169,7 +195,6 @@ def load_config():
                 config["console"] = ""
             return config
     except Exception as e:
-        print(f"Error loading config: {e}")
         return DEFAULT_CONFIG
 
 class LauncherApp(QMainWindow):
@@ -187,14 +212,13 @@ class LauncherApp(QMainWindow):
 
         self.config = load_config()
 
-        base_title = "PyLaunch 1.0"
         if self.file_path:
             filename = os.path.basename(self.file_path)
             self.setWindowTitle(f"{base_title} | {filename}")
         else:
             self.setWindowTitle(base_title)
 
-        self.setFixedSize(400, 100)
+        self.setFixedSize(WINDOW_WIDTH, WINDOW_HEIGHT_DEFAULT)
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -206,12 +230,28 @@ class LauncherApp(QMainWindow):
         
         self.ide_button = QPushButton("Open in IDE")
         self.ide_button.clicked.connect(self.open_in_ide)
-        self.ide_button.setMinimumHeight(40)
+        self.ide_button.setMinimumHeight(50)
         button_layout.addWidget(self.ide_button)
+
+        file_config_layout = QVBoxLayout()
+
+        config_button = QPushButton("⚙️")
+        config_button.setFixedSize(22, 22)
+        config_button.setToolTip("Open the configuration dialog to edit settings.")
+        config_button.clicked.connect(self.edit_config)
+        file_config_layout.addWidget(config_button)
+
+        file_button = QPushButton("📄")
+        file_button.setFixedSize(22, 22)
+        file_button.setToolTip("Select a new Python script to run.")
+        file_button.clicked.connect(self.select_new_file)
+        file_config_layout.addWidget(file_button)
+
+        button_layout.addLayout(file_config_layout)
 
         self.console_button = QPushButton("Run in Console")
         self.console_button.clicked.connect(self.run_in_console)
-        self.console_button.setMinimumHeight(40)
+        self.console_button.setMinimumHeight(50)
         button_layout.addWidget(self.console_button)
         
         self.layout.addLayout(button_layout)
@@ -227,25 +267,30 @@ class LauncherApp(QMainWindow):
         
         self.silent_mode = QCheckBox("Silent mode (hide console)")
         self.silent_mode.setChecked(self.config.get("silent_mode", False))
+        self.silent_mode.stateChanged.connect(self.toggle_keep_console)
         self.silent_mode.stateChanged.connect(self.save_checkbox_state)
-        checkbox_layout.addWidget(self.silent_mode)
         self.silent_mode.setVisible(self.is_pyw_file())
-        
+        checkbox_layout.addWidget(self.silent_mode)
+
+        self.add_arguments = QCheckBox("Custom Arguments")
+        self.add_arguments.stateChanged.connect(self.toggle_argument_input)
+        checkbox_layout.addWidget(self.add_arguments)
+
+        self.argument_input = QLineEdit()
+        self.argument_input.setPlaceholderText("Enter script arguments here... (e.g. -v)")
+        self.argument_input.setEnabled(False)
+        self.argument_input.setVisible(False)
+        checkbox_layout.addWidget(self.argument_input)
+
         bottom_layout.addLayout(checkbox_layout)
-        
-        file_button = QPushButton("📄")
-        file_button.setFixedSize(30, 30)
-        file_button.clicked.connect(self.select_new_file)
-        bottom_layout.addWidget(file_button)
-        
-        config_button = QPushButton("⚙️")
-        config_button.setFixedSize(30, 30)
-        config_button.clicked.connect(self.edit_config)
-        bottom_layout.addWidget(config_button)
         
         self.layout.addLayout(bottom_layout)
 
         self.apply_theme()
+
+        # Perform initial checks to set the correct state and size
+        self.toggle_keep_console()
+        self.update_window_height()
 
     def get_file_from_dialog(self):
         """Open file dialog to select a Python script."""
@@ -293,6 +338,7 @@ class LauncherApp(QMainWindow):
             return
 
         file_dir = os.path.dirname(os.path.abspath(self.file_path))
+        arguments = self.argument_input.text().strip()
 
         try:
             if self.silent_mode.isChecked():
@@ -301,10 +347,14 @@ class LauncherApp(QMainWindow):
                     self.show_error("Could not find pythonw.exe for silent execution")
                     return
                 
-                command = f'start /b "" "{pythonw_path}" "{self.file_path}"'
+                command = f'start /b "" "{pythonw_path}" "{self.file_path}" {arguments}'
             else:
-                keep_flag = "/K" if self.keep_console.isChecked() else "/C"
-                command = f'start "" cmd {keep_flag} "cd /d "{file_dir}" && "{python_path}" "{self.file_path}""'
+                if "powershell" in console_path.lower():
+                    no_exit_flag = "-NoExit" if self.keep_console.isChecked() else ""
+                    command = f'start "" "{console_path}" {no_exit_flag} -Command "cd \'{file_dir}\' ; & \'{python_path}\' \'{self.file_path}\' {arguments}"'
+                else:  # Default to cmd
+                    keep_flag = "/K" if self.keep_console.isChecked() else "/C"
+                    command = f'start "" cmd {keep_flag} "cd /d {file_dir} && "{python_path}" "{self.file_path}" {arguments}"'
             
             subprocess.run(command, shell=True, check=True)
             self.close()
@@ -373,12 +423,41 @@ class LauncherApp(QMainWindow):
         if new_file:
             self.file_path = new_file
             filename = os.path.basename(self.file_path)
-            self.setWindowTitle(f"PyLaunch 1.0 | {filename}")
+            self.setWindowTitle(f"{base_title} | {filename}")
             self.silent_mode.setVisible(self.is_pyw_file())
+            self.toggle_keep_console()
 
     def is_pyw_file(self):
         """Check if current file has .pyw extension."""
         return bool(self.file_path) and self.file_path.lower().endswith('.pyw')
+
+    def toggle_keep_console(self):
+        """Enable or disable the keep_console checkbox based on silent_mode state."""
+        if self.silent_mode.isChecked() and self.silent_mode.isVisible():
+            self.keep_console.setEnabled(False)
+        else:
+            self.keep_console.setEnabled(True)
+
+        self.update_window_height()  # Update height based on current state
+
+    def toggle_argument_input(self):
+        """Enable or disable the argument input box based on the checkbox state."""
+        is_checked = self.add_arguments.isChecked()
+        self.argument_input.setEnabled(is_checked)
+        self.argument_input.setVisible(is_checked)
+
+        self.update_window_height()  # Update height based on current state
+
+    def update_window_height(self):
+        """Update the window height based on the visibility of checkboxes."""
+        if self.add_arguments.isChecked() and self.is_pyw_file():
+            self.setFixedHeight(WINDOW_HEIGHT_WITH_PYW_AND_ARGUMENTS)  # Height when both are checked
+        elif self.add_arguments.isChecked():
+            self.setFixedHeight(WINDOW_HEIGHT_WITH_ARGUMENTS)  # Height when only arguments are checked
+        elif self.is_pyw_file():  # Check if the current file is a .pyw file
+            self.setFixedHeight(WINDOW_HEIGHT_WITH_PYW)  # Height when .pyw file is selected
+        else:
+            self.setFixedHeight(WINDOW_HEIGHT_DEFAULT)  # Reset height when neither is checked
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
