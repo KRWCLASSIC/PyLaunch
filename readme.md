@@ -1,7 +1,7 @@
-# PyLaunch `1.0`
+# PyLaunch `pre-1.1`
 
 [![Static Badge](https://img.shields.io/badge/Stable_Version-1.0-yellow)](https://github.com/KRWCLASSIC/PyLaunch/)
-[![Static Badge](https://img.shields.io/badge/Code_Version-1.0-yellow)](https://github.com/KRWCLASSIC/PyLaunch)
+[![Static Badge](https://img.shields.io/badge/Code_Version-pre--1.1-yellow)](https://github.com/KRWCLASSIC/PyLaunch/tree/3d0765fa88b80df7ba4a9a841791e06a73186d21)
 [![Static Badge](https://img.shields.io/badge/Maintainer-KRWCLASSIC-green)](https://github.com/KRWCLASSIC)
 
 [![Static Badge](https://img.shields.io/badge/Current_State-Usable-red)](where_u_goin_dawg)
